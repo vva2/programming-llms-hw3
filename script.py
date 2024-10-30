@@ -14,12 +14,15 @@ from dotenv import load_dotenv
 from langgraph.prebuilt.chat_agent_executor import AgentState
 from pydantic import BaseModel, Field
 from langchain_core.tools import tool
-from loggerr import logger
+from utils.loggerr import logger
 
 load_dotenv()
 
-local_model = ChatOllama(model=os.getenv("MISTRAL_NEMO_12B_MODEL"), temperature=0)
-model = ChatAnthropic(model_name=os.getenv("ANTHROPIC_3_5_MODEL"), temperature=0)
+LOCAL_MODEL_NAME = os.getenv('MISTRAL_NEMO_12B_MODEL')
+PUBLIC_MODEL_NAME = os.getenv("ANTHROPIC_3_5_MODEL")
+
+local_model = ChatOllama(model=LOCAL_MODEL_NAME, temperature=0)
+model = ChatAnthropic(model_name=PUBLIC_MODEL_NAME, temperature=0)
 # model = ChatOllama(model=os.getenv("MISTRAL_NEMO_12B_MODEL"), temperature=0)
 memory = MemorySaver()
 
@@ -28,31 +31,15 @@ class Email(BaseModel):
     """Email model"""
     recipient_email: str = Field(description="recipient email address")
     subject: str = Field(description="subject of the email")
-    body: Optional[str] = Field(description="body of the email")
+    body: str = Field(description="body of the email including the sender signature.")
 
 
 
 
 
 @tool
-def send_email(recipient_email: str, subject: str, body: str):
-    """sends an email. this function is called only when the user approves the draft email. call this function only when recipient email, subject, and body are available and the email is a valid email."""
-    # """sends an email only when recipient and message is explicitly defined and the email is a valid email address."""
-
-    logger.info('inside send_email')
-    logger.info(f'recipient email: {recipient_email}')
-    logger.info(f'subject: {subject}')
-    logger.info(f'body: {body}')
-
-
-    return "email sent!"
-
-@tool
-def create_draft_email(recipient_email: str, message: str):
-    """creates a draft email before sending the email. recipient_email and message are explicitly provided and the email is a valid email."""
-    logger.info('inside create_draft_email')
-    logger.info(f'recipient email: {recipient_email}')
-    logger.info(f'message: {message}')
+def send_email(recipient_email: str, message: str):
+    """sends an email. call this function only when recipient email, and message are explicitly provided by the user and the recipient_email is a valid email."""
 
     draft = model.with_structured_output(Email).invoke(f"recipient={recipient_email}, message={message}")
     missing_fields = []
@@ -65,11 +52,34 @@ def create_draft_email(recipient_email: str, message: str):
         missing_fields.append('recipient email')
 
     if missing_fields.__len__() > 0:
-        return f"missing information: {missing_fields}. Please confirm additional info from the user."
+        return f"missing information: {missing_fields}. Please confirm additional info from the user. Here are the details of the draft: {draft.__dict__}"
 
-    return f"generated draft: {model.with_structured_output(Email).invoke(f"recipient={recipient_email}, message={message}")}\n would you like to proceed with this draft?"
 
-tools = [create_draft_email, send_email]
+    print(f"Sending the email with the following info:\n{draft.__dict__}\n")
+
+    user_input = input("Would you like to proceed? (y/n) ")
+
+    if user_input.strip().lower() != 'y':
+        return f"Sender (User) denied the send email request. May not be pleased with the draft. Ask the user the reason for denying the request."
+
+    logger.info('inside send_email')
+    logger.info(f'recipient email: {draft.recipient_email}')
+    logger.info(f'subject: {draft.subject}')
+    logger.info(f'body: {draft.body}')
+
+    return "email sent!"
+
+# @tool
+# def create_draft_email(recipient_email: str, message: str):
+#     """creates a draft email before sending the email. recipient_email and message are explicitly provided and the email is a valid email."""
+#     logger.info('inside create_draft_email')
+#     logger.info(f'recipient email: {recipient_email}')
+#     logger.info(f'message: {message}')
+#
+#     return f"generated draft: {model.with_structured_output(Email).invoke(f"recipient={recipient_email}, message={message}")}\n would you like to proceed with this draft?"
+
+
+tools = [send_email]
 tool_node = ToolNode(tools)
 
 checkpointer = MemorySaver()
