@@ -13,8 +13,9 @@ from langgraph.prebuilt import create_react_agent, InjectedState, ToolNode
 from pydantic import BaseModel, Field
 
 from models.models import ModelFactory
-from tools.gmail import GmailTool
-from tools.search import SearchTool
+from tools.calendar import CalendarTools
+from tools.gmail import GmailTools
+from tools.search import SearchTools
 from utils.loggerr import logger
 
 
@@ -23,7 +24,7 @@ local_model = ModelFactory.local_model
 model = ModelFactory.public_model
 memory = MemorySaver()
 
-tools = [GmailTool.send_email, SearchTool.search]
+tools = [*GmailTools.tools, *SearchTools.tools, *CalendarTools.google_calendar_tools]
 tool_node = ToolNode(tools)
 
 checkpointer = MemorySaver()
