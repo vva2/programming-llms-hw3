@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from models.models import ModelFactory
 from tools.gmail import GmailTool
+from tools.search import SearchTool
 from utils.loggerr import logger
 
 
@@ -22,7 +23,7 @@ local_model = ModelFactory.local_model
 model = ModelFactory.public_model
 memory = MemorySaver()
 
-tools = [GmailTool.send_email]
+tools = [GmailTool.send_email, SearchTool.search]
 tool_node = ToolNode(tools)
 
 checkpointer = MemorySaver()
@@ -39,13 +40,6 @@ def can_proceed_safely(user_input: str) -> bool:
     )
 
     prompt = f"The following response describes the private data found in an user prompt. Using this data answer 'Yes' (if private data is indeed present) or 'No' (otherwise or if you are unsure). BE CONCISE I DO NOT NEED ANY EXPLANATION.\n-----\n{private_data_check_response.content}\n-----"
-
-    # result = local_model.with_structured_output(PrivateInfoFlag).invoke(prompt)
-    #
-    # if result is None:
-    #     logger.error(f"result is none in {can_proceed_safely} for prompt: {prompt}")
-    #     logger.info("Skipping the private information check")
-    #     return True
 
     result = local_model.invoke([HumanMessage(prompt)])
 

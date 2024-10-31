@@ -3,12 +3,11 @@ from pydantic import BaseModel, Field
 
 from models.models import ModelFactory
 from utils.loggerr import logger
-from google_auth_oauthlib.flow import Flow, InstalledAppFlow
+from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import base64
 from email.mime.text import MIMEText
 import os
-from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 
 
