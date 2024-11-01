@@ -7,9 +7,11 @@ from tools.calendar import CalendarTools
 from tools.gmail import GmailTools
 from tools.pdf import PdfTools
 from tools.search import SearchTools
+from loggerr import logger
+from tools.memory import MemoryTools
 
 def get_tools():
-    return [*GmailTools.tools, *SearchTools.tools, *CalendarTools.tools, *PdfTools.tools]
+    return [*GmailTools.tools, *SearchTools.tools, *CalendarTools.tools, *PdfTools.tools, *MemoryTools.tools]
 
 def get_trimmer():
     trimmer = trim_messages(
@@ -19,7 +21,7 @@ def get_trimmer():
         # When token_counter=len, each message
         # will be counted as a single token.
         # Remember to adjust for your use case
-        max_tokens=10,
+        max_tokens=5,
         # Most chat models expect that chat history starts with either:
         # (1) a HumanMessage or
         # (2) a SystemMessage followed by a HumanMessage
@@ -40,6 +42,8 @@ def message_modifier(state: dict) -> dict:
     # Retrieve the list of messages from the state
     messages = state.get("messages", [])
 
+    logger.info(f"Messages before: {messages}")
+
     # Initialize your trimmer
     _trimmer = get_trimmer()
 
@@ -50,13 +54,15 @@ def message_modifier(state: dict) -> dict:
                 "You are a helpful assistant with access to various tools. "
                 "Before using a tool, confirm with the user if it would benefit them. "
                 "For example, if sending an email, present the draft for approval first. "
-                "Apply similar consideration to other tools, using your best judgment to ensure the user is informed before any action."
+                "Apply similar consideration to other tools, using your best judgment to ensure the user is informed before any action. If you do a great job at this I will give you a tip of $1000!"
             )
         )
         messages = [system_message] + messages
 
     # Apply the trimmer to the messages
     messages = _trimmer.invoke(messages)
+
+    logger.info(f"Messages after: {messages}")
 
     # Update the state with the modified messages
     state["messages"] = messages
@@ -67,6 +73,7 @@ class Agent:
     def __init__(self):
         _tools = get_tools()
         _trimmer = get_trimmer()
+        MemorySaver()
         self.agent = create_react_agent(ModelFactory.public_model, state_modifier=message_modifier, tools=_tools, checkpointer=MemorySaver())
 
 

@@ -6,9 +6,12 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.chains import RetrievalQA
 from models.models import ModelFactory
 import os
+from loggerr import logger
 
 
 class PdfTools:
+
+
     _vectorstore = Chroma(embedding_function=HuggingFaceEmbeddings(), persist_directory=os.getenv("CHROMA_DB_PATH"))
 
     _text_splitter = RecursiveCharacterTextSplitter(
@@ -23,9 +26,9 @@ class PdfTools:
 
     @tool
     def pdf_qa(questions: list[str], pdf_files: list[str] = []):
-        """reads multiple pdf files and answers the questions. If the pdf files is empty, then answers questions based on the previously stored pdf data"""
+        """Processes and reads multiple PDF files to answer user-provided questions. If no PDF files are supplied, answers questions using previously stored PDF data."""
 
-        print(f"pdf_files: {pdf_files} | questions: {questions}")
+        logger.info(f"pdf_files: {pdf_files} | questions: {questions}")
 
         all_splits = []
 
@@ -52,8 +55,7 @@ class PdfTools:
             if result is not None:
                 responses.append(result)
 
-        print("Done pdf_qa")
-
+        logger.info(f"responses: {responses}")
         return f'Here are my responses: {responses}'
 
     tools = [pdf_qa]

@@ -1,7 +1,4 @@
 from composio_langchain import ComposioToolSet, Action
-from dotenv import load_dotenv
-
-load_dotenv()
 
 class CalendarTools:
     tools = ComposioToolSet().get_tools(actions=[
