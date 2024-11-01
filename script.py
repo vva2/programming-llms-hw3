@@ -1,34 +1,19 @@
-from pprint import pprint
-from typing import Optional, Union, List
+from dotenv import load_dotenv
+load_dotenv()
 
-from langchain_ollama import ChatOllama
-from typing_extensions import Annotated
-import os
-from langchain_anthropic import ChatAnthropic
-from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.tools import tool
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import create_react_agent, InjectedState, ToolNode
+from Agent import Agent
+
+
+from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
 
 from models.models import ModelFactory
-from tools.calendar import CalendarTools
-from tools.gmail import GmailTools
-from tools.search import SearchTools
 from utils.loggerr import logger
 
 
-
 local_model = ModelFactory.local_model
-model = ModelFactory.public_model
-memory = MemorySaver()
 
-tools = [*GmailTools.tools, *SearchTools.tools, *CalendarTools.google_calendar_tools]
-tool_node = ToolNode(tools)
-
-checkpointer = MemorySaver()
-agent = create_react_agent(model, tools, checkpointer=checkpointer)
+agent = Agent().agent
 
 class PrivateInfoFlag(BaseModel):
     has_private_info: bool = Field(description="true if private data is present, false otherwise")
@@ -63,8 +48,8 @@ if __name__ == '__main__':
             config = {"configurable": {"thread_id": 53}}
             user_input = input("USER>\n")
 
-            if len(user_input) == 0 or not can_proceed_safely(user_input):
-                continue
+            # if len(user_input) == 0 or not can_proceed_safely(user_input):
+            #     continue
 
             response = agent.invoke({"messages": [HumanMessage(content=user_input)]}, config=config)
 

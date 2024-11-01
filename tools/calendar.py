@@ -1,8 +1,10 @@
 from composio_langchain import ComposioToolSet, Action
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class CalendarTools:
-    google_calendar_tools = ComposioToolSet().get_tools(actions=[
+    tools = ComposioToolSet().get_tools(actions=[
         Action.GOOGLECALENDAR_CREATE_EVENT,
         Action.GOOGLECALENDAR_DELETE_EVENT,
         Action.GOOGLECALENDAR_FIND_FREE_SLOTS,
