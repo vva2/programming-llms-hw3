@@ -5,13 +5,10 @@ load_dotenv()
 
 from Agent import Agent
 from langchain_core.messages import HumanMessage
-from pydantic import BaseModel, Field
 from models.models import ModelFactory
 from loggerr import logger
 import click
 import readline
-
-
 
 
 
@@ -26,7 +23,8 @@ class Assistant:
         private_data_check_response = local_model.invoke(
             [
                 HumanMessage(
-                    content=f"Identify the private information in this user prompt. If the private information is not explicitly mentioned then simply dont report anything.:\n-----------`{user_input}`\n-----------")
+                    content=f"Identify the private information in this user prompt. If the private information is not explicitly mentioned then simply dont report anything.:\n-----------`{user_input}`\n-----------"
+                )
             ]
         )
 
@@ -56,6 +54,8 @@ class Assistant:
             if os.getenv('FULLY_LOCAL') == 0 and os.getenv('SKIP_PRIVACY_CHECK') == 0 and not self.can_proceed_safely(
                     user_input, ModelFactory.get_local_model()):
                 return "Input erased from memory. Lets try again."
+
+            logger.info(f'User input: {user_input}')
 
             response = self.agent.invoke({"messages": [HumanMessage(content=user_input)]}, config=self.config)
 

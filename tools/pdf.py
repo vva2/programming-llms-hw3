@@ -27,14 +27,14 @@ class PdfTools:
     @tool
     def pdf_qa(questions: list[str], pdf_files: list[str] = []):
         """Processes and reads multiple PDF files to answer user-provided questions. If no PDF files are supplied, answers questions using previously stored PDF data."""
-
+        logger.info(f"Running pdf_qa tool")
         logger.info(f"pdf_files: {pdf_files} | questions: {questions}")
 
         all_splits = []
 
         for pdf_file in pdf_files:
             if not os.path.exists(pdf_file):
-                print("Error: pdf file {} does not exist. Skipping the file.".format(pdf_file))
+                logger.error("Error: pdf file {} does not exist. Skipping the file.".format(pdf_file))
                 continue
 
             loader = PyPDFLoader(pdf_file)
@@ -50,7 +50,7 @@ class PdfTools:
         for query in questions:
             result = PdfTools._qa_chain.invoke(query)
 
-            print(result)
+            logger.info(f"answer: {result}")
 
             if result is not None:
                 responses.append(result)

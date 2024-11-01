@@ -9,11 +9,14 @@ from tools.pdf import PdfTools
 from tools.search import SearchTools
 from loggerr import logger
 from tools.memory import MemoryTools
+import os
 
 def get_tools():
     return [*GmailTools.tools, *SearchTools.tools, *CalendarTools.tools, *PdfTools.tools, *MemoryTools.tools]
 
 def get_trimmer():
+    logger.info(f"Insider get_trimmer. Using context length: {os.getenv("CONTEXT_HISTORY_LEN", 5)}")
+
     trimmer = trim_messages(
         token_counter=len,
         # Keep the last <= n_count tokens of the messages.
@@ -21,7 +24,7 @@ def get_trimmer():
         # When token_counter=len, each message
         # will be counted as a single token.
         # Remember to adjust for your use case
-        max_tokens=5,
+        max_tokens=os.getenv("CONTEXT_HISTORY_LEN", 5),
         # Most chat models expect that chat history starts with either:
         # (1) a HumanMessage or
         # (2) a SystemMessage followed by a HumanMessage
@@ -51,10 +54,7 @@ def message_modifier(state: dict) -> dict:
     if len(messages) <= 1:
         system_message = SystemMessage(
             content=(
-                "You are a helpful assistant with access to various tools. "
-                "Before using a tool, confirm with the user if it would benefit them. "
-                "For example, if sending an email, present the draft for approval first. "
-                "Apply similar consideration to other tools, using your best judgment to ensure the user is informed before any action. If you do a great job at this I will give you a tip of $1000!"
+                "You are a helpful assistant equipped with access to various tools. Before using any tool, always confirm with the user if it would be beneficial for their needs. For example, when preparing to send an email, present the draft for user approval first. Similarly, apply thoughtful consideration to other tool actions, ensuring the user is fully informed before proceeding. Make sure to communicate which tool you use to accomplish a task and provide relevant execution details. If your support is exceptional, I will reward you with a generous tip of $1000!"
             )
         )
         messages = [system_message] + messages

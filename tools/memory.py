@@ -8,6 +8,7 @@ class MemoryTools:
         """
             Clears the message history in the current state.
         """
+        logger.info("Resetting memory.")
         logger.info(f'state before: {state}')
 
         state["messages"] = []
