@@ -4,7 +4,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.chains import RetrievalQA
-from models.models import ModelFactory
+from models.models import public_model
 import os
 from loggerr import logger
 
@@ -20,7 +20,7 @@ class PdfTools:
     )
 
     _qa_chain = RetrievalQA.from_chain_type(
-        ModelFactory.public_model,
+        public_model,
         retriever=_vectorstore.as_retriever()
     )
 

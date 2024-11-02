@@ -2,7 +2,7 @@ from langchain_core.messages import SystemMessage, trim_messages
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 
-from models.models import ModelFactory
+from models.models import public_model
 from tools.calendar import CalendarTools
 from tools.gmail import GmailTools
 from tools.pdf import PdfTools
@@ -24,7 +24,7 @@ def get_trimmer():
         # When token_counter=len, each message
         # will be counted as a single token.
         # Remember to adjust for your use case
-        max_tokens=os.getenv("CONTEXT_HISTORY_LEN", 5),
+        max_tokens=int(os.getenv("CONTEXT_HISTORY_LEN", 5)),
         # Most chat models expect that chat history starts with either:
         # (1) a HumanMessage or
         # (2) a SystemMessage followed by a HumanMessage
@@ -74,7 +74,5 @@ class Agent:
         _tools = get_tools()
         _trimmer = get_trimmer()
         MemorySaver()
-        self.agent = create_react_agent(ModelFactory.public_model, state_modifier=message_modifier, tools=_tools, checkpointer=MemorySaver())
-
-
-
+        self.agent = create_react_agent(public_model, state_modifier=message_modifier, tools=_tools,
+                                        checkpointer=MemorySaver())

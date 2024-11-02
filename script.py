@@ -5,7 +5,7 @@ load_dotenv()
 
 from Agent import Agent
 from langchain_core.messages import HumanMessage
-from models.models import ModelFactory
+from models.models import public_model, get_local_model
 from loggerr import logger
 import click
 import readline
@@ -30,7 +30,7 @@ class Assistant:
 
         prompt = f"The following response describes the private data found in an user prompt. Using this data answer 'Yes' (if private data is indeed present) or 'No' (otherwise or if you are unsure). BE CONCISE I DO NOT NEED ANY EXPLANATION.\n-----\n{private_data_check_response.content}\n-----"
 
-        result = ModelFactory.get_local_model().invoke([HumanMessage(prompt)])
+        result = get_local_model().invoke([HumanMessage(prompt)])
 
         logger.info(f'response: {result} for prompt: {prompt}')
 
@@ -51,8 +51,9 @@ class Assistant:
             if len(user_input) == 0:
                 return "Empty input recieved. Please try again!"
 
-            if os.getenv('FULLY_LOCAL') == 0 and os.getenv('SKIP_PRIVACY_CHECK') == 0 and not self.can_proceed_safely(
-                    user_input, ModelFactory.get_local_model()):
+            if int(os.getenv('FULLY_LOCAL')) == 0 and int(
+                    os.getenv('SKIP_PRIVACY_CHECK')) == 0 and not self.can_proceed_safely(
+                    user_input, get_local_model()):
                 return "Input erased from memory. Lets try again."
 
             logger.info(f'User input: {user_input}')
