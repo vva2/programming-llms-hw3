@@ -1,5 +1,7 @@
 import os
-
+import threading
+import itertools
+import time
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -10,12 +12,18 @@ from loggerr import logger
 import click
 import readline
 
-
-
 class Assistant:
     def __init__(self):
         self.agent = Agent().agent
         self.config = {"configurable": {"thread_id": 53}}
+        self.loading = False
+
+    def _spinner_animation(self):
+        spinner = itertools.cycle(['|', '/', '-', '\\'])
+        while self.loading:
+            print(f"\rAssistant is thinking... {next(spinner)}", end="", flush=True)
+            time.sleep(0.1)
+        print("\r", end="", flush=True)
 
     def can_proceed_safely(self, user_input: str, local_model) -> bool:
         logger.info(f"Checking '{user_input}' for privacy violations.")
@@ -44,30 +52,47 @@ class Assistant:
 
         return True
 
+    def _stop_spinner(self, spinner_thread):
+        # Stop the spinner
+        self.loading = False
+        spinner_thread.join()
 
     # Function to simulate the assistant's response
     def assistant_response(self, user_input) -> str:
+        spinner_thread = None
         try:
+            # Start the spinner in a separate thread
+            self.loading = True
+            spinner_thread = threading.Thread(target=self._spinner_animation)
+            spinner_thread.start()
+
             if len(user_input) == 0:
-                return "Empty input recieved. Please try again!"
+                self._stop_spinner(spinner_thread)
+                return "Empty input received. Please try again!"
 
             if int(os.getenv('FULLY_LOCAL')) == 0 and int(
                     os.getenv('SKIP_PRIVACY_CHECK')) == 0 and not self.can_proceed_safely(
                     user_input, get_local_model()):
-                return "Input erased from memory. Lets try again."
+                self._stop_spinner(spinner_thread)
+                return "Input erased from memory. Let's try again."
 
             logger.info(f'User input: {user_input}')
 
             response = self.agent.invoke({"messages": [HumanMessage(content=user_input)]}, config=self.config)
 
-            logger.info(response)
+            self._stop_spinner(spinner_thread)
 
+            logger.info(response)
             return response['messages'][-1].content
         except Exception as e:
-            logger.error(f'Error Occured: {e}')
-            return "Error Occured. Please try again."
+            if not spinner_thread:
+                self._stop_spinner(spinner_thread)
 
-        return "Place holder response"
+            logger.error(f'Error Occurred: {e}')
+            return "Error Occurred. Please try again."
+        finally:
+            # Ensure the spinner stops even if an exception occurs
+            self.loading = False
 
     # Function to read multi-line input with history support
     def get_multiline_input_with_history(self, prompt):

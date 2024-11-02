@@ -10,8 +10,6 @@ from loggerr import logger
 
 
 class PdfTools:
-
-
     _vectorstore = Chroma(embedding_function=HuggingFaceEmbeddings(), persist_directory=os.getenv("CHROMA_DB_PATH"))
 
     _text_splitter = RecursiveCharacterTextSplitter(
