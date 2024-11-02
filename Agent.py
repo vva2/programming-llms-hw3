@@ -28,11 +28,11 @@ def get_trimmer():
         # Most chat models expect that chat history starts with either:
         # (1) a HumanMessage or
         # (2) a SystemMessage followed by a HumanMessage
-        start_on="human",
-        # Most chat models expect that chat history ends with either:
-        # (1) a HumanMessage or
-        # (2) a ToolMessage
-        end_on=("human", "tool"),
+        # start_on="system",
+        # # Most chat models expect that chat history ends with either:
+        # # (1) a HumanMessage or
+        # # (2) a ToolMessage
+        # end_on=("human", "tool"),
         # Usually, we want to keep the SystemMessage
         # if it's present in the original history.
         # The SystemMessage has special instructions for the model.
@@ -113,7 +113,8 @@ Error Handling:
     logger.info(f"Messages before 2: {messages}")
 
     # Apply the trimmer to the messages
-    messages = messages[:1] + messages[1:][-int(os.getenv("CONTEXT_HISTORY_LEN", 5)):]
+    # messages = messages[:1] + messages[1:][-int(os.getenv("CONTEXT_HISTORY_LEN", 5)):]
+    messages = _trimmer.invoke(messages)
 
     logger.info(f"Messages after: {messages}")
 

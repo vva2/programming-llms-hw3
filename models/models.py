@@ -10,7 +10,6 @@ PUBLIC_MODEL_NAME = os.getenv("ANTHROPIC_3_5_MODEL")
 def get_local_model():
     return ChatOllama(model=LOCAL_MODEL_NAME, temperature=0)
 
-
 logger.info(f"Using Fully config: {int(os.getenv('FULLY_LOCAL'))}")
 
 if int(os.getenv('FULLY_LOCAL')) == 1:

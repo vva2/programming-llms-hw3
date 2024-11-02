@@ -17,6 +17,7 @@ class Assistant:
         self.agent = Agent().agent
         self.config = {"configurable": {"thread_id": 53}}
         self.loading = False
+        self._spinner = None
 
     def _spinner_animation(self):
         spinner = itertools.cycle(['|', '/', '-', '\\'])
@@ -43,6 +44,7 @@ class Assistant:
         logger.info(f'response: {result} for prompt: {prompt}')
 
         if result and 'yes' in result.content.lower():
+            self._stop_spinner()
             print(f"\n!!PRIVATE INFO FOUND!!:\n{private_data_check_response.content}")
             user_consent = input("\nDo you want to proceed sending this info to a public LLM? (y/n): ")
 
@@ -52,41 +54,43 @@ class Assistant:
 
         return True
 
-    def _stop_spinner(self, spinner_thread):
+    def _stop_spinner(self):
         # Stop the spinner
         self.loading = False
-        spinner_thread.join()
+
+        if self._spinner:
+            self._spinner.join()
+            self._spinner = None
 
     # Function to simulate the assistant's response
     def assistant_response(self, user_input) -> str:
-        spinner_thread = None
+        self._spinner = None
         try:
             # Start the spinner in a separate thread
             self.loading = True
-            spinner_thread = threading.Thread(target=self._spinner_animation)
-            spinner_thread.start()
+            self._spinner = threading.Thread(target=self._spinner_animation)
+            self._spinner.start()
 
             if len(user_input) == 0:
-                self._stop_spinner(spinner_thread)
+                self._stop_spinner()
                 return "Empty input received. Please try again!"
 
             if int(os.getenv('FULLY_LOCAL')) == 0 and int(
                     os.getenv('SKIP_PRIVACY_CHECK')) == 0 and not self.can_proceed_safely(
                     user_input, get_local_model()):
-                self._stop_spinner(spinner_thread)
+                self._stop_spinner()
                 return "Input erased from memory. Let's try again."
 
             logger.info(f'User input: {user_input}')
 
             response = self.agent.invoke({"messages": [HumanMessage(content=user_input)]}, config=self.config)
 
-            self._stop_spinner(spinner_thread)
+            self._stop_spinner()
 
             logger.info(response)
             return response['messages'][-1].content
         except Exception as e:
-            if not spinner_thread:
-                self._stop_spinner(spinner_thread)
+            self._stop_spinner()
 
             logger.error(f'Error Occurred: {e}')
             return "Error Occurred. Please try again."
@@ -111,6 +115,9 @@ class Assistant:
 
         return "\n".join(lines)
 
+    def respond_assistant(self, response):
+        click.echo(click.style("Assistant>", fg="blue") + "\n" + response)
+
     # Main function to handle the chat
     def chat(self):
         click.echo("Welcome to the CLI Chat!")
@@ -128,7 +135,7 @@ class Assistant:
 
                 # Generate and display the assistant's response
                 response = self.assistant_response(user_input)
-                click.echo(click.style("Assistant>", fg="blue") + "\n" + response)
+                self.respond_assistant(response)
             except KeyboardInterrupt:
                 click.echo(click.style("\nExiting the chat. Goodbye!", fg="yellow"))
                 break
