@@ -58,6 +58,14 @@ Before starting the installation, make sure you have Python (I used Python 3.12.
    ```
    Follow the prompts to complete the authentication process for both services.
 
+## Running the Application
+
+To run the application, navigate to the root of the project and execute:
+
+```bash
+python script.py
+```
+
 ## Verification
 
 To verify your installation:
@@ -74,3 +82,7 @@ If you encounter any issues:
 - Ensure Ollama is running before attempting to use the assistant
 - Verify that your Python environment matches the requirements
 - Check that Composio integrations were successfully authenticated
+
+--- 
+
+This guide now includes instructions on how to run the application. Let me know if you need any more details!
