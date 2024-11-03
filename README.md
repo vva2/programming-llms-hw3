@@ -83,6 +83,3 @@ If you encounter any issues:
 - Verify that your Python environment matches the requirements
 - Check that Composio integrations were successfully authenticated
 
---- 
-
-This guide now includes instructions on how to run the application. Let me know if you need any more details!
