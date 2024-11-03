@@ -1,3 +1,5 @@
+import os
+
 from langchain_core.tools import tool
 from langgraph.graph import MessagesState
 from loggerr import logger
@@ -9,12 +11,9 @@ class MemoryTools:
             Clears the message history in the current state.
         """
         logger.info("Resetting memory.")
-        logger.info(f'state before: {state}')
-
-        state["messages"] = []
-
-        logger.info(f'state after: {state}')
+        os.environ['RESET_MEMORY'] = 'YES'
 
         return "cleared memory successfully"
 
-    tools = [reset_memory]
+    tools = []
+    # tools = [reset_memory]

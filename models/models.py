@@ -4,7 +4,7 @@ from langchain_ollama import ChatOllama
 from loggerr import logger
 
 LOCAL_MODEL_NAME = os.getenv('MISTRAL_NEMO_12B_MODEL')
-PUBLIC_MODEL_NAME = os.getenv("ANTHROPIC_3_5_MODEL")
+PUBLIC_MODEL_NAME = os.getenv("ANTHROPIC_3_5_MODEL_V2")
 
 
 def get_local_model():

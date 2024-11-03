@@ -1,13 +1,14 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import os
 import threading
 import itertools
 import time
-from dotenv import load_dotenv
-load_dotenv()
-
 from Agent import Agent
 from langchain_core.messages import HumanMessage
-from models.models import public_model, get_local_model
+from models.models import get_local_model
 from loggerr import logger
 import click
 import readline
@@ -24,6 +25,7 @@ class Assistant:
         while self.loading:
             print(f"\rAssistant is thinking... {next(spinner)}", end="", flush=True)
             time.sleep(0.1)
+        print("\r" + " " * 50, end="", flush=True)
         print("\r", end="", flush=True)
 
     def can_proceed_safely(self, user_input: str, local_model) -> bool:
@@ -45,11 +47,13 @@ class Assistant:
 
         if result and 'yes' in result.content.lower():
             self._stop_spinner()
-            print(f"\n!!PRIVATE INFO FOUND!!:\n{private_data_check_response.content}")
-            user_consent = input("\nDo you want to proceed sending this info to a public LLM? (y/n): ")
+            click.echo(click.style(f"\n!!PRIVATE INFO FOUND!!\n{private_data_check_response.content}\n", fg="yellow"))
+            user_consent = click.prompt("\nDo you want to proceed sending this info to a public LLM? (y/n): ")
 
             if user_consent.lower().strip() != 'y':
-                print(f"Your most recent input has been cleared from memory. Please re-phrase it for me.")
+                click.echo(
+                    click.style(f"Your most recent input has been cleared from memory. Please re-phrase it for me.",
+                                fg="yellow"))
                 return False
 
         return True
@@ -116,12 +120,12 @@ class Assistant:
         return "\n".join(lines)
 
     def respond_assistant(self, response):
-        click.echo(click.style("Assistant>", fg="blue") + "\n" + response)
+        click.echo(f"{click.style("Assistant>", fg="red")}\n{response}\n")
 
     # Main function to handle the chat
     def chat(self):
         click.echo("Welcome to the CLI Chat!")
-        click.echo("Type 'exit' to end the chat.\n")
+        click.echo("Type 'exit' or '\\q' to end and '\\c' to clear the chat.\n")
 
         while True:
             try:
@@ -133,12 +137,21 @@ class Assistant:
                     click.echo(click.style("\nExiting the chat. Goodbye!", fg="yellow"))
                     break
 
+                if user_input.lower() == "\\c":
+                    click.clear()
+                    continue
+
                 # Generate and display the assistant's response
                 response = self.assistant_response(user_input)
                 self.respond_assistant(response)
             except KeyboardInterrupt:
                 click.echo(click.style("\nExiting the chat. Goodbye!", fg="yellow"))
                 break
+
+
+def clear_screen_event():
+    logger.info("Ctrl + L detected! Clearing the screen...")
+    click.clear()
 
 @click.command()
 def main():

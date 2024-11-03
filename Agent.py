@@ -11,6 +11,7 @@ from loggerr import logger
 from tools.memory import MemoryTools
 import os
 
+
 def get_tools():
     return [*GmailTools.tools, *SearchTools.tools, *CalendarTools.tools, *PdfTools.tools, *MemoryTools.tools]
 
@@ -41,11 +42,24 @@ def get_trimmer():
 
     return trimmer
 
+
+def reset_memory(state: dict):
+    logger.info(f"Insider reset_memory from state: {state}")
+
+    os.environ["RESET_MEMORY"] = 'NO'
+    state['messages'] = state['messages'][-1:]
+
+    logger.info(f"Insider reset_memory to state: {state}")
+
 def message_modifier(state: dict) -> dict:
     # Retrieve the list of messages from the state
     messages = state.get("messages", [])
 
-    logger.info(f"Messages before 1: {messages}")
+    logger.info(f'RESET_MEMORY: {os.getenv("RESET_MEMORY")}')
+    if os.getenv("RESET_MEMORY") == 'YES':
+        reset_memory(state)
+
+    logger.info(f"Messages before 1: len - {len(messages)} {messages}")
 
     # Initialize your trimmer
     _trimmer = get_trimmer()
@@ -110,13 +124,13 @@ Error Handling:
         )
         messages = [system_message] + messages
 
-    logger.info(f"Messages before 2: {messages}")
+    logger.info(f"Messages before 2: len - {len(messages)} {messages}")
 
     # Apply the trimmer to the messages
     # messages = messages[:1] + messages[1:][-int(os.getenv("CONTEXT_HISTORY_LEN", 5)):]
     messages = _trimmer.invoke(messages)
 
-    logger.info(f"Messages after: {messages}")
+    logger.info(f"Messages after: len - {len(messages)} {messages}")
 
     # Update the state with the modified messages
     state["messages"] = messages
